@@ -1,0 +1,35 @@
+<template>
+  <div id="dialog" class="dialog">
+    <image src='http://ww2.sinaimg.cn/large/006jSeDEjw1fb2um05zw1j30ei0lrag3.jpg' style="width: 750;height: 1350;position:fixed;left:0;top:0;" resize='cover'></image>
+    <image src='http://ww2.sinaimg.cn/large/006jSeDEjw1fb2ule7bicj305o066wh9.jpg' style="width: 300;height: 300;position:fixed;left:40;top:600;" resize='cover' onTouchstart='model1selected'></image>
+    <image src='http://ww4.sinaimg.cn/large/006jSeDEjw1fb2uloprs8j309d06w40u.jpg' style="width: 300;height: 300;position:fixed;right:40;top:600;" resize='cover' onTouchstart='model2selected'></image>
+    <text style="font-size: 40;color:white;position:fixed;left:80;top:930;" onTouchstart='handlemodel1'>酷炫模式</text>
+    <text style="font-size: 40;color:white;position:fixed;right:80;top:930;" onTouchstart='handlemodel2'>小清新模式</text>
+  </div>
+</template>
+
+<style>
+.dialog {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+</style>
+
+<script>
+module.exports = {
+  data:{
+
+  },
+  methods:{
+    model1selected:function(){
+    this._parent.$emit('model1selected');
+    },
+    model2selected:function(){
+    this._parent.$emit('model2selected');
+    },
+  }
+}
+</script>

@@ -1,0 +1,67 @@
+<template>
+    <div id="test" style="left:{{left}};bottom:{{bottom}};height:{{height}};" index="{{index}}" class="show" >
+       <image src="{{imgurl}}" style="width:50;height:{{height}};"></image>
+    </div>
+</template>
+
+<style>
+  .show {
+   position:fixed;
+   width:50;
+   opacity:1;
+    }
+  .hide{
+    width:50;
+    position:fixed;
+    opacity:1;
+  }
+</style>
+
+<script>
+var animation = require('@weex-module/animation');
+  module.exports = {
+    data: {
+      imgurl: '',
+      img:'',
+      color:'black',
+      left:'',
+      bottom:'',
+      index:'',
+      type:'',
+      height:''
+    },
+    ready:function(){
+      if(this.type==0){
+        //this.imgurl='https://github.com/yuzai/storeimg/blob/master/enermy1.png';
+        this.imgurl=this.img[2];//enemy1
+        this.height=50;
+      }else if(this.type==1){
+        //this.imgurl='https://github.com/yuzai/storeimg/blob/master/enermy0.png';
+        this.imgurl=this.img[3];//enemy0
+          this.height=70;
+      }else if(this.type==2){
+        //this.imgurl='http://p1.bqimg.com/582120/f2123e15a386d155.png';
+        this.imgurl=this.img[4];//enemy2
+          this.height=50;
+      }else {
+        this.imgurl=this.img[5];//pizza
+          this.height=50;
+      }
+      this.$on('hit',function(e){
+        if(this.type!==3)
+            this.imgurl=this.img[6];//explore
+        else {
+          this.imgurl=this.img[7];//explore2
+        }
+        var testEl = this.$el('test');
+        animation.transition(testEl,{
+           styles:{
+             opacity:0
+           },
+           duration: 2000, //ms
+           delay: 0 //ms
+         });
+      });
+     }
+  }
+</script>

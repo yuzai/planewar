@@ -1,0 +1,28 @@
+<template>
+    <div style="left:{{left}};bottom:{{bottom}};" class="{{classname}}" >
+       <image src="{{imgurl}}" style="width:45;height:45;"></image>
+    </div>
+</template>
+
+<style>
+  .show {
+   position:fixed;
+   opacity:1;
+    }
+    .hide{
+      position:fixed;
+      opacity:0;
+    }
+</style>
+
+<script>
+  module.exports = {
+    data: {
+      backcolor:'black',
+      left:'',
+      bottom:'',
+      classname:'',
+      imgurl:''
+    },
+  }
+</script>

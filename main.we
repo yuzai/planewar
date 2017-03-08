@@ -1,0 +1,677 @@
+<template>
+  <div class="game-board" onpanmove="handlepanmove">
+    <video class="video" onfinish="onfinish" onfail='video_fail' play-status="{{video.play_video}}" src="{{selectedurl[11]}}" style="width:750;height:1;"></video>
+    <div>
+      <image src="{{selectedurl[9]}}" id="target" style="width: 750;height: 1400;position:fixed;left:0;bottom:{{backimgtop+1395+1395}};" resize='cover'></image>
+      <image src="http://ww2.sinaimg.cn/large/006jSeDEjw1fbdpybija3j307v0e0gm9.jpg" id="target" style="width: 750;height: 1400;position:fixed;left:0;bottom:{{backimgtop+1395}};" resize='cover'></image>
+      <image src="{{selectedurl[9]}}" id="target" style="width: 750;height: 1400;position:fixed;left:0;bottom:{{backimgtop}};" resize='cover'></image>
+    </div>
+    <div class='jindutiao' style='width:{{oil.left}};background-color: {{oil.color}};position:fixed;top:0;left:0;'></div>
+    <bullet repeat="(index,item) in bulletlist"  track-by="index" left="{{item.left}}" bottom="{{item.bottom}}" classname="{{item.classname}}" imgurl="{{selectedurl[8]}}"></bullet>
+    <enermy-plane  repeat="(index,item) in enermylist" id="enermy-{{item.index}}" type="{{item.type}}" track-by="index" img="{{selectedurl}}" left="{{item.left}}" bottom="{{item.bottom}}" index="{{item.index}}" hit="{{item.hit}}"></enermy-plane>
+
+    <myplane id="myplane" classname="{{myclassname}}" left="{{left}}" bottom="{{bottom}}" img="{{selectedurl.slice(0,2)}}"></myplane>
+
+    <image id='music' src = 'http://ww2.sinaimg.cn/large/006jSeDEjw1fb2ulutlglj304m04labc.jpg' style="width: 60;height: 60; position:fixed;right:10;top:10;opacity:{{(music.play===true)?1:0.5}};" resize='cover' onTouchstart="handlemusicclick"></image>
+    <image id='pause' src = 'http://ww4.sinaimg.cn/large/006jSeDEjw1fb2ulx7nu3j305k05kwey.jpg' style="width: 60;height: 60; position:fixed;right:10;top:90;" onTouchstart='handlePause'></image>
+    <image id='rank'  src = 'http://ww4.sinaimg.cn/large/006jSeDEjw1fbdq9r2fnkj30280293yn.jpg' style="width: 60;height: 60; position:fixed;right:10;top:170;" onTouchstart='handleRank'></image>
+    <div class="addscore" id="addscore" style="bottom:{{addscorebottom}};left:{{addscoreleft}}">
+      <text style="font-size:30;color:white;">+{{addscore}}</text>
+    </div>
+
+    <div class="score">
+      <text style="font-size:30;color:white;">Score: {{score}}</text>
+      <text style="font-size:30;color:white;">{{status}}</text>
+    </div>
+
+    <div id="dialog" class="dialog" if="{{isShowDialog}}">
+      <div class="dialog-backdrop"></div>
+      <image src="{{selectedurl[10]}}" style="width: 700;height: 450;position:absolute;left:25;top:325;"></image>
+
+      <div class="dialog-content">
+        <div class="dialog-header">
+          <text class="dialog-title" style="font-size: 60;color:orange;">{{(status==='init')?dialog.init.header:(status==='pause')?dialog.pause.header:dialog.die.header}}</text>
+        </div>
+        <div class="dialog-body" if="status!=='init'">
+          <text style="font-size: 40;color:orange;">当前得分：{{score}}</text>
+          <text style="font-size: 30;color:orange;" if="dialog.die.reason===1">小心敌机</text>
+          <text style="font-size: 30;color:orange;" if='dialog.die.reason===2'>不吃披萨会燃油耗尽哦</text>
+        </div>
+        <div class="dialog-footer" if="{{status==='init'}}">
+          <text class="controlinfro" onTouchstart = 'handleStart'>start</text>
+          <text class="controlinfro" onTouchstart = 'closeDialog'>back</text>
+        </div>
+        <div class="dialog-footer" if="{{status==='pause'}}">
+          <text class="controlinfro" onTouchstart = 'handleStart'>continue</text>
+          <text class="controlinfro" onTouchstart = 'closeDialog'>back</text>
+        </div>
+        <div class="dialog-footer" if="{{status==='die'}}">
+          <text class="controlinfro" onTouchstart = 'handleStart'>restart</text>
+          <text class="controlinfro" onTouchstart = 'closeDialog'>back</text>
+        </div>
+        <text style="font-size: 25;color:orange;text-align:center;padding-top:80;" if="status==='init'">按start开始游戏，back返回上一级菜单</text>
+      </div>
+    </div>
+    <Modelselect if="{{showModel}}"></Modelselect>
+
+    <div  class="rank_model" if="showRank">
+        <div class="dialog-backdrop"></div>
+        <image src='{{selectedurl[10]}}' style="width: 720;height: 800;position:absolute;left:15;top:120;"></image>
+        <div class="rank_head">
+            <text class='text'>排名</text>
+            <text class='text'>用户名</text>
+            <text class='text'>得分</text>
+        </div>
+        <div class="rank_content">
+            <text if='scores.length===0' style='text-align:center;color:orange;font-size:40;'>还没有人玩过，排行榜上空空如也</text>
+            <rank repeat="(index,item) in scores" score='{{item}}' name='{{users[index]}}' index='{{index}}'></rank>
+        </div>
+        <div class="rank_foot">
+            <text class='text' onTouchstart = 'handleRankClear'>clearAll</text>
+            <text class='text' onTouchstart = 'handleRankClose'>close</text>
+        </div>
+    </div>
+  </div>
+</template>
+
+<style>
+  .text{
+    text-align: center;
+    font-size: 40;
+    color:orange;
+  }
+  .rank_model{
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+  .rank_content{
+    position:absolute;
+    top:300;
+    left:25;
+    width:700;
+  }
+  .rank_head{
+    position:absolute;
+    top:200;
+    left:25;
+    width:700;
+    height:100;
+    padding-top:20;
+    padding-bottom:20;
+    padding-left: 100;
+    padding-right: 100;
+    flex-direction:row;
+    justify-content: space-between;
+  }
+  .rank_foot{
+    position:absolute;
+    top:740;
+    left:25;
+    width:700;
+    height:100;
+    padding-top:20;
+    padding-bottom:20;
+    padding-left: 100;
+    padding-right: 100;
+    flex-direction:row;
+    justify-content: space-between;
+  }
+  .game-board {
+    width:750;
+    height:1350;
+
+  }
+  .video{
+    position:absolute;
+    top:0;
+    left:0;
+  }
+  .jindutiao{
+    position:absolute;
+    top:0;
+    left:0;
+    height:5;
+  }
+  .addscore{
+    width:100;
+    height:50;
+    position:fixed;
+    opacity:1;
+  }
+  .score{
+    position:fixed;
+    top:10;
+    left:0;
+  }
+  .dialog-backdrop {
+    opacity: .2;
+    width:750;
+    height:1350;
+    background-color: white;
+  }
+  .dialog {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+  .dialog-content {
+    width: 450;
+    position:absolute;
+    top:380;
+    left:150;
+    text-align: center;
+  }
+  .dialog-header {
+    padding: 20;
+    position: relative;
+    border-bottom-width: 1;
+    border-bottom-style: solid;
+    border-bottom-color: #efefef;
+  }
+  .dialog-body {
+    padding: 20;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .dialog-footer {
+    padding: 20;
+    position: relative;
+    border-top-width: 1;
+    border-top-style: solid;
+    border-top-color: #efefef;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .close {
+    font-size: 60;
+    position: absolute;
+    right: 10;
+    top: 10;
+  }
+  .btn {
+    text-align: center;
+    color: #ffffff;
+    padding: 12;
+    background-color: #3071a9;
+    border-color: #285e8e;
+    border-radius: 4px;
+  }
+  .controlinfro{
+    font-size: 45;
+    color:orange;
+  }
+</style>
+
+<script>
+// var timer1;
+var timer2;
+var timer;
+var index1=0;
+var index2=0;
+var temp=0;var temp2=0;
+var storage = require('@weex-module/storage');
+var modal = require('@weex-module/modal');
+var key;
+var bubbleSort = function (arr,arr2) {
+  var flag = true;
+  var len = arr.length;
+  for (var i = 0; i < len - 1; i++) {
+    flag = true;
+    for (var j = 0; j < len - 1 - i; j++) {
+      if (arr[j] < arr[j + 1]) {
+        var temp = arr[j+1];
+        arr[j+1] = arr[j];
+        arr[j] = temp;
+        var temp = arr2[j+1];
+        arr2[j+1] = arr2[j];
+        arr2[j] = temp;
+        flag = false;
+      }
+    }
+    if (flag) {
+      break;
+    }
+  }
+};
+  module.exports = {
+    data: {
+      a:['http://ww1.sinaimg.cn/large/006jSeDEjw1fb2ulwmf2xj305k05k0uj.jpg',
+         'http://ww4.sinaimg.cn/large/006jSeDEjw1fb2ullafnoj305k055dhx.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fb2uljr20lj305n04jta8.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fb2uljezr1j305n0a0gpq.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fb2ulk84frj305s04ctap.jpg',
+         'http://ww3.sinaimg.cn/large/006jSeDEjw1fb2ulxzanuj305v05s0uv.jpg',
+         'http://ww4.sinaimg.cn/large/006jSeDEjw1fb2ullafnoj305k055dhx.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fbdpyc03j5j303f039t9e.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fb2ulgt35tj302i03vglz.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fbdpz73te8j30880emaaj.jpg',
+         'http://ww3.sinaimg.cn/large/006jSeDEjw1fb2ulynrfbj307c059gnn.jpg',
+         'http://gslb.miaopai.com/stream/iK8YPMJwHez-ot-OqVAWDA__.mp4?vend=miaopai&'],
+
+      b:['http://ww2.sinaimg.cn/large/006jSeDEjw1fb2ulvxbmtj305t06jabg.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fb2yfdk2bsj306806qtba.jpg',
+         'http://ww3.sinaimg.cn/large/006jSeDEjw1fb2y9lf174j305m040gmi.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fb2y9m8o6vj302f023t8q.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fb2ulnkvjtj305q05uq43.jpg',
+         'http://ww3.sinaimg.cn/large/006jSeDEjw1fb2ulxzanuj305v05s0uv.jpg',
+         'http://ww2.sinaimg.cn/large/006jSeDEjw1fb2y9mp6r5j305t05ognq.jpg',
+         'http://ww1.sinaimg.cn/large/006jSeDEjw1fbdpyc03j5j303f039t9e.jpg',
+         'http://ww2.sinaimg.cn/large/006jSeDEjw1fb2yd9v1g3j305t05sq4s.jpg',
+         'http://ww3.sinaimg.cn/large/006jSeDEjw1fb2ulshjr7j30xc0jx7ee.jpg',
+         'http://ww3.sinaimg.cn/large/006jSeDEjw1fb2ulcb9haj307204zaak.jpg',
+         'http://gslb.miaopai.com/stream/C3~hBqqtaSUsY6XpLA5xGA__.mp4?vend=miaopai&'],
+
+      selectedurl:[],
+      c:'',
+      showModel:true,
+      backimgtop:0,
+      oil:{
+        left:750,
+        color:'orange'
+      },
+      dialog:{
+        init:{
+          header:"欢迎"
+        },
+        pause:{
+          header:"燃烧吧！少年"
+        },
+        die:{
+          header:"Game Over!",
+          reason:0
+        }
+      },
+      status:'init',
+      myclassname: 'show',
+      color1:'orange',
+      left:335,
+      bottom:10,
+      bulletlist:[],
+      enermylist:[],
+      score:0,
+      scores:[],
+      users:[],
+      showRank:false,
+      addscore:0,
+      isShowDialog:false,
+      dialogTitle: 'HELLO',
+      dialogBody: 'Weex is best!',
+      comments:'',
+      addscorebottom:-100,
+      addscoreleft:-100,
+      video:{
+        src:'http://gslb.miaopai.com/stream/iK8YPMJwHez-ot-OqVAWDA__.mp4?vend=miaopai&',
+        play_video:'pause'
+      },
+      music:{
+        play:true
+      }
+    },
+    created:function(){
+      this.$on('model1selected',function(){
+        this.c=1;
+        this.selectedurl=this.a;
+        this.showModel=false;
+        this.isShowDialog = true;
+      }.bind(this));
+      this.$on('model2selected',function(){
+        this.c=2;
+        this.selectedurl=this.b;
+        this.showModel=false;
+        this.isShowDialog = true;
+      }.bind(this))
+      storage.getItem('scores', function(e){
+        if(e.data!=='undefined')
+        {
+          this.scores = e.data.split(',').map(function(item,index){
+             if(index!==0)
+              return parseInt(item)
+              else {
+                return parseInt(item.slice(1))
+              }
+            // else {
+            //   return parseInt(item.splice(1))
+            // }
+            });
+        }
+        else {
+          this.scores = [];
+        }
+      }.bind(this))
+      storage.getItem('users', function(e){
+        if(e.data!=='undefined')
+        {
+          this.users = e.data.split(',').map(function(item,index){
+            return item.replace(/(\[|\]|")/g,'');
+            // return item;
+          });
+        }
+        else {
+          this.users = [];
+        }
+      }.bind(this))
+    },
+    methods:{
+      model1selected:function(){
+        this.c=1;
+        this.selectedurl=this.a;
+        this.showModel=false;
+        this.isShowDialog = true;
+      },
+      model2selected:function(){
+        this.c=2;
+        this.selectedurl=this.b;
+        this.showModel=false;
+        this.isShowDialog = true;
+      },
+      video_fail:function(){
+        var modal = require('@weex-module/modal');
+        modal.toast({
+            'message': '资源加载出错，请检查网络',
+            'duration': 3
+        });
+      },
+      handlemusicclick:function(){
+        if(this.c==1){
+          this.video.src=this.a[11];
+        }else if(this.c==2){
+          this.selectedurl=this.b;
+        }
+        this.music.play=!this.music.play;
+        if(this.status==='playing' && this.music.play===true)
+          this.video.play_video='play';
+        else {
+          this.video.play_video='pause';
+        }
+      },
+      music_load:function(){
+      },
+      onfinish:function(){
+        this.video.play_video='pause';
+        setTimeout(function(){if(this.music.play) this.video.play_video='play';}.bind(this),500);
+      },
+      handleRank:function(){
+        this.handlePause();
+        this.showRank = !this.showRank;
+      },
+      handleRankClear:function(){
+        this.scores = [];
+        this.users = [];
+        storage.removeItem('scores',function(e){
+        })
+        storage.removeItem('users',function(e){
+        })
+      },
+      handleRankClose:function(){
+        this.handleStart();
+        this.showRank = false;
+      },
+      handlepanmove:function(event){
+        if(this.status==='playing')
+        {
+          var tempX=event.changedTouches[0].screenX;
+          var tempY=1350-event.changedTouches[0].screenY;
+          if(tempX<=0){
+            this.left=0;
+          }else if(tempX>=670){
+            this.left=670;
+          }else{
+            this.left=tempX;
+          }
+          if(tempY<=10){
+            this.bottom=10;
+          }else if(tempY>=1310){
+            this.bottom=1310;
+          }else{
+            this.bottom=tempY;
+          }
+        }
+      },
+      handlePause:function(){
+        if(this.status==='playing'){
+          this.status='pause';
+          // clearInterval(timer1);
+          clearInterval(timer2);
+          this.isShowDialog=true;
+          this.addscoreleft=-100;
+          this.addscorebottom=-100;
+          this.video.play_video = 'pause';
+        }
+      },
+      handleStart:function(){
+        if(this.status!=='pause')
+        {
+          this.oil.left = 750;
+          this.bulletlist=[];
+          this.enermylist=[];
+          this.score=0;
+          index1=0;
+          index2=0;
+          this.left=335;
+          this.bottom=50;
+        }
+       this.isShowDialog=false;
+       this.status = 'playing';
+       clearInterval(timer2);
+       timer2=setInterval(function(){
+         //oil
+         if(this.oil.left>0)
+           this.oil.left-= 1;
+         if(this.oil.left <= 300){
+           this.oil.color = 'red'
+         }
+         else {
+           this.oil.color = 'orange'
+         }
+         if(this.oil.left===0)
+         {
+           this.myclassname='hide';
+          //  clearInterval(timer1);
+           clearInterval(timer2);
+           this.isShowDialog=true;
+            this.addscoreleft=-100;
+           this.addscorebottom=-100;
+           this.$vm('myplane').$emit('explore');
+           this.video.play_video = 'pause';
+           this.status = 'die';
+           this.dialog.die.reason=2;
+           return
+         }
+
+         temp++; temp2++;
+       for(var j=0;j<this.enermylist.length;j++){
+           var success=0;
+         for( var i=0;i<this.bulletlist.length;i++){
+             if(this.enermylist[j].hit)
+               break;
+             if(this.bulletlist[i].classname=='hide')
+               continue;
+          //hit
+             if(this.enermylist[j].left<this.bulletlist[i].left+30&&this.enermylist[j].left+50>this.bulletlist[i].left&&this.enermylist[j].bottom<=this.bulletlist[i].bottom+30&&this.enermylist[j].bottom+50>this.bulletlist[i].bottom){
+                 this.bulletlist[i].classname='hide';
+                 this.enermylist[j].hit=true;
+                 clearTimeout(timer);
+                 this.addscoreleft=this.enermylist[j].left;
+                 this.addscorebottom=this.enermylist[j].bottom+70;
+                 if(this.enermylist[j].type===3) this.oil.left=(this.oil.left+100>750)?750:this.oil.left+100;
+                 this.$vm('enermy-'+this.enermylist[j].index).$emit('hit',{index:this.enermylist[j].index});
+                 switch(this.enermylist[j].type){
+                   case 0:this.addscore=10;break;
+                   case 1:this.addscore=100;break;
+                   case 2:this.addscore=50;break;
+                   case 3:this.addscore=10;break;
+                   default:break;
+                 }
+                 this.score+=this.addscore;
+                 timer=setTimeout(function(){
+                  this.addscoreleft=-100;
+                 this.addscorebottom=-100;
+               }.bind(this),300);
+               break;
+             }
+         }
+         //die
+         if(this.enermylist[j].type!==3&&!this.enermylist[j].hit&&this.enermylist[j].left>this.left-50&&this.enermylist[j].left<this.left+80&&this.enermylist[j].bottom<=this.bottom+30&&this.enermylist[j].bottom+50>this.bottom){
+           this.myclassname='hide';
+          //  clearInterval(timer1);
+           clearInterval(timer2);
+           this.isShowDialog=true;
+            this.addscoreleft=-100;
+           this.addscorebottom=-100;
+           this.$vm('myplane').$emit('explore');
+           this.video.play_video = 'pause';
+           this.status = 'die';
+           this.dialog.die.reason=1;
+           var user_name;
+           if(this.scores.length<5||this.score>this.scores[4]){
+              modal.prompt({
+                'message': '真厉害，进入前5啦，留下大名吧!',
+                'okTitle': 'yes',
+                'cancelTitle': 'cancel'
+              }, function (e) {
+                if(e.result=='yes')
+                {
+                  this.scores.push(this.score);
+                  this.users.push(e.data);
+                 //  this.scores=this.scores.sort(function(a,b){return b-a}).slice(0,10);
+                  bubbleSort(this.scores,this.users);
+                  this.scores = this.scores.slice(0,5);
+                  this.users  = this.users.slice(0,5);
+                  storage.setItem('scores', this.scores, function(e){
+                  })
+                  storage.setItem('users', this.users, function(e){
+                  })
+                  this.showRank=true;
+                }
+              }.bind(this));
+           }
+         }
+       }
+
+       //产生子弹和敌机
+       if(temp===6){
+         temp=0;
+         this.bulletlist.push({'index':index1++,'left':this.left+25,'bottom':this.bottom,'classname':'show'});
+         if(index1>=1000) index1 = 0;
+      }
+       if(temp2===12){
+          temp2=0;
+          var x = Math.random();
+          var addleft;
+          if(this.c==1){
+            addleft=25
+          }else if(this.c==2){
+            addleft=125;
+          }
+          if(x<0.2)
+            this.enermylist.push({'index':index2++,'type':1,'left':Math.floor(Math.random()*700)+addleft,'bottom':1200,'hit':false});
+          else if(x<0.5)
+            this.enermylist.push({'index':index2++,'type':2,'left':Math.floor(Math.random()*700)+addleft,'bottom':1200,'hit':false});
+          else if(x<0.58)
+            this.enermylist.push({'index':index2++,'type':3,'left':Math.floor(Math.random()*700)+addleft,'bottom':1200,'hit':false});
+          else {
+            this.enermylist.push({'index':index2++,'type':0,'left':Math.floor(Math.random()*700)+addleft,'bottom':1200,'hit':false});
+          }
+          if(index2>=1000) index2=0;
+       }
+       this.bulletlist=this.bulletlist.filter(function(item){
+         item.bottom+=10;
+         return item.bottom<1350;
+       });
+
+       if(this.c==1){
+         this.enermylist=this.enermylist.filter(function(item){
+           switch(item.type){
+             case 0:item.bottom-=8;break;
+             case 1:item.bottom-=13;break;
+             case 2:item.bottom-=10;break;
+             case 3:item.bottom-=7;break;
+           }
+           return item.bottom>-70;
+         });
+       }else if(this.c==2){
+         this.enermylist=this.enermylist.filter(function(item){
+           switch(item.type){
+             case 0:item.bottom-=8;item.left-=5;break;
+             case 1:item.bottom-=15;item.left-=8;break;
+             case 2:item.bottom-=11;item.left-=5;break;
+             case 3:item.bottom-=8;item.left-=5;break;
+           }
+          return item.bottom>=-70&&item.left>=-50;
+         });
+       }
+       if(this.c===1){
+       this.backimgtop-=5;
+       if(this.backimgtop<=-1395*2){
+         this.backimgtop=0;
+       }
+     }
+   }.bind(this),50);
+    //  clearInterval(timer1);
+    //  timer1=setInterval(function(){
+    //    this.bulletlist=this.bulletlist.filter(function(item){
+    //      item.bottom+=10;
+    //      return item.bottom<1350;
+    //    });
+     //
+    //    if(this.c==1){
+    //      this.enermylist=this.enermylist.filter(function(item){
+    //        switch(item.type){
+    //          case 0:item.bottom-=8;break;
+    //          case 1:item.bottom-=13;break;
+    //          case 2:item.bottom-=10;break;
+    //          case 3:item.bottom-=7;break;
+    //        }
+    //        return item.bottom>-70;
+    //      });
+    //    }else if(this.c==2){
+    //      this.enermylist=this.enermylist.filter(function(item){
+    //        switch(item.type){
+    //          case 0:item.bottom-=8;item.left-=5;break;
+    //          case 1:item.bottom-=15;item.left-=8;break;
+    //          case 2:item.bottom-=11;item.left-=5;break;
+    //          case 3:item.bottom-=8;item.left-=5;break;
+    //        }
+    //       return item.bottom>=-70&&item.left>=-50;
+    //      });
+    //    }
+    //    if(this.c===1){
+    //    this.backimgtop-=5;
+    //    if(this.backimgtop<=-1395*2){
+    //      this.backimgtop=0;
+    //    }
+    //   }
+     //
+     //
+    //  }.bind(this),50);
+       if(this.music.play)
+          this.video.play_video = 'play';
+     },
+
+     closeDialog: function (e) {
+      //  clearInterval(timer1);
+       clearInterval(timer2);
+       this.isShowDialog = false;
+       this.showModel = true;
+       this.status='init';
+       this.c='';
+       this.score=0;
+       this.backimgtop=0;
+       this.bulletlist=[];
+       this.enermylist=[];
+       this.myclassname='show';
+       this.left=335;
+       temp=0;
+       temp2=0;
+       index1=0;
+       index2=0;
+       this.video.play_video = 'pause';
+     }
+    }
+  }
+</script>

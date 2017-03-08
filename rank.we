@@ -1,0 +1,33 @@
+<template>
+    <div class='rank'>
+       <text class='text'>{{index+1}}</text>
+       <text class='text'>{{name}}</text>
+       <text class='text'>{{score}}</text>
+    </div>
+</template>
+
+<style>
+.rank{
+  padding-top:20;
+  padding-bottom:20;
+  padding-left: 100;
+  padding-right: 100;
+  flex-direction:row;
+  justify-content: space-between;
+}
+.text{
+  text-align: center;
+  font-size: 40;
+  color:orange;
+}
+</style>
+
+<script>
+module.exports = {
+  data: {
+    index:'',
+    score:'',
+    name:''
+  }
+}
+</script>
